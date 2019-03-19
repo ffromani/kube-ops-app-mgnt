@@ -16,9 +16,49 @@ http://github.com/{mojaves,fromanirh}
 
 * Talk outline
 
-1. applications in a cluster
+1. life in a cluster
 2. operations and operators
-3. build your own
+3. build your own 
+
+* Life in a cluster
+
+What do we expect of managing applications in a kubernetes cluster?
+
+* Assumptions
+
+* Deployment
+
+* Upgrading
+
+* Distribution
+
+* Operations and operators
+
+* When NOT to use an operator?
+
+* Which problems do we want to solve?
+
+All of them :)
+Actually, all the ones we talked about in the previous section.
+Still quite an improvement!
+
+* Paradigm/Definition
+
+* Building blocks
+
+* Operator in a nutshell
+
+* How to use it?
+
+1. deploy CRD
+2. deploy the operator itself
+3. deploy CRs as needed
+
+* Finding/Publishing operators
+
+* Build your own
+
+* Two kinds of operators
 
 * Q? A!
 
