@@ -1,0 +1,27 @@
+Kubernetes operators: the next level of application management
+Let the machines do the work!
+13 Apr 2019
+Tags: containers,kubernetes,operator,management,golang
+
+Francesco Romani
+Senior Software Engineer, Red Hat
+fromani {gmail,redhat}
+http://github.com/{mojaves,fromanirh}
+
+* whoami
+- sweng @ Red Hat (but opinions and mistakes are my own!)
+- works daily(-ish): libvirt, kvm, python, golang, kubernetes
+- interested in: more golang, containers, kubernetes; lisp
+- happy linux user (red hat linux, debian, ubuntu, fedora)
+
+* Talk outline
+
+1. applications in a cluster
+2. operations and operators
+3. build your own
+
+* Q? A!
+
+Questions?
+
+Slides & more @ https://github.com/mojaves/
