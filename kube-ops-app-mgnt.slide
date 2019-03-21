@@ -22,15 +22,52 @@ http://github.com/{mojaves,fromanirh}
 
 * Life in a cluster
 
-What do we expect of managing applications in a kubernetes cluster?
+How's managing applications in a kubernetes cluster?
+What are we expected to do?
 
-* Assumptions
+* Common mangament tasks
 
-* Deployment
+1. provision/configuration
+2. upgrade
+3. uninstall
+4. backup/restore?
+5. logging?
+6. autoscaling?
+
+* Provisioning
+
+Could be a simple manifest, but what if not?
+
+examples:
+1. multi-component
+2. certificate enrollnment
+3. infrastructure integration (e.g hooks, validation)
 
 * Upgrading
 
+Just pull a new image?
+What if
+1. we need to undo some changes to the cluster (e.g. config. format changed)
+2. we need to uninstall some pieces
+3. we need some new piece
+
 * Distribution
+
+How much stuff do I need to ship?
+Just a manifest and an image?
+*Many* manifests and an image?
+*Many* manifests and *many* images?
+Do I need to do extra steps in the middle?
+
+* Solutions?
+
+I can write a script/helper/ansible role/whatever!
+
+Sure, but...
+1. still requires _some_ human intervention (maybe just kickoff)
+2. runs _outside_ the cluster
+
+Works, but can we do better?
 
 * Operations and operators
 
