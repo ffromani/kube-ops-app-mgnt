@@ -23,14 +23,14 @@ http://github.com/{mojaves,fromanirh}
 * Life in a cluster
 
 .image images/Container_crane_and_MSC_Sola.jpg 420 _
-.caption Containers are being loaded on the container ship MSC Sola at the container terminal of Bremerhaven in Germany by Tvabutzku1234, public domain, from Wikimedia Commons
+.caption "Containers are being loaded on the container ship MSC Sola at the container terminal of Bremerhaven in Germany" by Tvabutzku1234, public domain, from Wikimedia Commons
 
 * Expectations
 
 How's managing applications in a kubernetes cluster?
 
 .image images/640px-B747-cockpit.jpg _ 520
-.caption Cockpit of a 747-230 seen at the Technik Museum Speyer (Germany) by Snowdog, public domain, from Wikimedia commons
+.caption "Cockpit of a 747-230 seen at the Technik Museum Speyer (Germany)" by Snowdog, public domain, from Wikimedia commons
 
 * Common management tasks (1/3)
 
@@ -47,7 +47,7 @@ The stuff everyone wants:
 
 * Common management tasks (3/3)
 
-TL;DR: A modern robust dockerized app needs a lot of integration within the platform.
+TL;DR: A modern robust containerized app needs a lot of integration within the platform.
 
 But let's focus on easy stuff first - the stuff everyone takes for granted
 
@@ -57,9 +57,24 @@ Easy things are easy :)
 
   kubectl create -f manifests.yaml
 
-* Is provisioning always simple?
+* Real world is messy
 
-When you need to integrate componets, things may get complicate soon.
+.image images/640px-Entropy.jpg
+.caption "Spontaneous increase in disorder of a carefully arranged system. An irreversible process, except with the input of energy" by Alex Dinovitser, Creative Commons Attribution-Share Alike 3.0 Unported, from Wikimedia Commons
+
+* Is provisioning always simple? (1/2)
+
+What if my app is _not_ stateless (are DBs banned from cluster?)
+
+What if I need pre-provision or post-provision steps?
+
+1. config updates
+2. integration with external systems (DNS)
+3. integration with the cluster/k8s
+
+* Is provisioning always simple? (2/2)
+
+When you need to integrate components, things may get complicate soon.
 A real world example: a simple validation hook
 
 1. enroll certs
@@ -70,22 +85,13 @@ A real world example: a simple validation hook
 6. create service
 7. register configuration
 
-* Provisioning example explained
-
-There _are_ way to automate most of steps!
-And there are (much) more complex examples, also.
-
-Indeed automating is the whole point
-
-Wouldn't be better if the automation was _inside_ the cluster?
-
 * Upgrading
 
 Just pull a new image?
 What if
 1. we need to undo some changes to the cluster (e.g. config. format changed)
-2. we need to uninstall some pieces (uninistall in disguise!)
-3. we need some new piece
+2. we need to uninstall some components (uninistall in disguise!)
+3. we need some new artifact
 
 * uninstall (1/2)
 
@@ -120,32 +126,112 @@ Do I need to do extra steps in the middle?
 * Solutions?
 
 Automation to the rescue!
-
 I can write a script/helper/ansible role/whatever!
 
-Sure, but...
-1. still requires _some_ human intervention (maybe just kickoff)
-2. runs _outside_ the cluster
+Indeed automating is the whole point!
+You need to version it btw
+Still needs to connect to the cluster _from_ _outside_ (CLI tool? daemon?)
 
-Works, but can we do better?
+Wouldn't be better if the automation was _inside_ the cluster?
 
 * Operations and operators
 
-on which we see how the Operator pattern makes our life easier
-
-* When NOT to use an operator?
+.image images/640px-An_emergency_dispatch_center_in_Finland.jpg
+.caption "Emergency dispatch center (emergency response center) in Kerava, Finland" by Pollo, GNU FDL 2.1+, from Wikimedia Commons
 
 * Which problems do we want to solve?
 
-All of them :)
-Actually, all the ones we talked about in the previous section.
-Still quite an improvement!
+1. Manage a kubernetes application like humans would do, but automatically
+2. Embed the domain-specific knowledge in a software unit
+3. Make the solution easy to deploy and the consume
+4. Focus on the high level items
+5. Use kubernetes tools to solve a kubernetes issue :)
 
-* Paradigm/Definition
+* #define operator
 
-* Building blocks
+.link https://developers.redhat.com/blog/2018/12/18/kubernetes-operators-in-depth?intcmp=701f2000000tjyaAAA From "Kubernetes Operators in Depth":
 
-* Operator in a nutshell
+   An operator is a way of building an application and driving an application on top of Kubernetes,
+   behind Kubernetes APIs. The idea is that when you have an application, [...] any complex
+   application needs a lot of domain-specific knowledge [...]
+   Humans should not be involved in this kind of operation because it kind of breaks the promise that
+   containers gave us. Containers’ promise was ‘Hey, you package it once, it runs everywhere.
+
+* Kubernetes applications?
+
+Wait, what's a "kubernetes application"?
+
+  A Kubernetes application is an application that is both deployed on Kubernetes
+  and managed using the Kubernetes APIs and kubectl tooling.
+
+.link https://developers.redhat.com/blog/2018/12/18/kubernetes-operators-in-depth/?intcmp=701f2000000tjyaAAA source (among many others)
+
+* Operator definition revised
+
+.link https://operatorhub.io/what-is-an-operator "What is an Operator?"
+
+  The goal of an Operator is to put operational knowledge into software.
+  Previously this knowledge only resided in the minds of administrators,
+  various combinations of shell scripts or automation software like Ansible.
+  It was outside of your Kubernetes cluster and hard to integrate.
+
+* Operator definition, final
+
+TL;DR: consolidate domain knowledge in software running _inside_ a Kubernetes cluster.
+
+.image images/Inception-wordmark.svg.png _ 800
+.caption "The wordmark on the cover of the movie Inception" by Know-World, public domain, from Wikimedia Commons
+
+* Building blocks of an Operator
+
+.image images/19th_century_knowledge_mechanisms_homemade_concrete_block_mold_parts.jpg
+.caption "19th century knowledge mechanisms homemade concrete block mold parts" by Henry Colin Campbell, Public Domain, from Wikimedia Commons
+
+Let's review what we will use to build our Operator(s)
+
+* Building blocks: CRDs
+
+.link https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/ Definition:
+
+  A resource is an endpoint in the Kubernetes API that stores a collection of API objects
+  of a certain kind.
+  For example, the built-in pods resource contains a collection of Pod objects.
+
+  A custom resource is an extension of the Kubernetes API that is not necessarily available
+  in a default Kubernetes installation.
+  It represents a customization of a particular Kubernetes installation.
+  However, many core Kubernetes functions are now built using custom resources, making
+  Kubernetes more modular.
+
+Programmers should find this definition familiar (think ADT)
+
+TL;DR add user-defined objects that fit and feel native in the K8S infra
+
+* Building blocks: controllers
+
+.link https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/ Definition:
+
+  In Kubernetes, a controller is a control loop that watches the shared state of the cluster
+  through the apiserver and makes changes attempting to move the current state towards the
+  desired state.
+  Examples of controllers that ship with Kubernetes today are the replication controller,
+  endpoints controller, namespace controller, and serviceaccounts controller.
+
+TL;DR: a control loop
+
+* Operator = CRD(s) + Controller + focus
+
+.image images/479px-Columbus_Breaking_the_Egg_MET_DP825004.jpg _ 500
+.caption Columbus Breaking the Egg, CC0, From Wikimedia Commons
+
+* Operator VS controller (again)
+
+Every operator is-a controller
+But not all controllers are operator
+
+Operator = CRD(s) + Controller + focus
+
+.link https://github.com/kubeflow/tf-operator/issues/300 Github discussion with lot of good insights
 
 * How to use it?
 
@@ -153,7 +239,13 @@ Still quite an improvement!
 2. deploy the operator itself
 3. deploy CRs as needed
 
+* When NOT to use an operator?
+
 * Finding/Publishing operators
+
+.link https://operatorhub.io/ OperatorHUB.io
+
+  OperatorHub.io is a new home for the Kubernetes community to share Operators
 
 * Build your own
 
