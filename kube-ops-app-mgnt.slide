@@ -32,58 +32,78 @@ How's managing applications in a kubernetes cluster?
 .image images/640px-B747-cockpit.jpg _ 520
 .caption "Cockpit of a 747-230 seen at the Technik Museum Speyer (Germany)" by Snowdog, public domain, from Wikimedia commons
 
-* Common management tasks (1/3)
+* Common management tasks
 
-The stuff everyone takes for granted
+Let's focus on the stuff everyone takes for granted
 1. provision/configuration
 2. upgrade
 3. uninstall
 
-* Common management tasks (2/3)
-The stuff everyone wants:
-1. backup/restore (where it makes sense)
-2. logging (more than `kubectl logs` - elastic search & friends)
-3. autoscaling (prometheus integration)
+* Simple provision is simple (1/2)
 
-* Common management tasks (3/3)
+  apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    name: testapp-deployment
+  spec:
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          app: testapp
+      spec:
+        containers:
+        - name: testapp
+          image: quay.io/user/testapp
+          ports:
+          - containerPort: 3000
 
-TL;DR: A modern robust containerized app needs a lot of integration within the platform.
+* Simple provision is simple (2/2)
 
-But let's focus on easy stuff first - the stuff everyone takes for granted
+  kind: Service
+  apiVersion: v1
+  metadata:
+    name: testapp-service
+  spec:
+    selector:
+      app: testapp
+    ports:
+      - protocol: TCP
+        port: 3000
+        targetPort: 3000
 
-* Provisioning is simple!
+* A messier provisioning case
 
-Easy things are easy :)
+Let's try something a bit more advanced.
+I want to integrate with the simplest possible external component: Kubernetes itself.
 
-  kubectl create -f manifests.yaml
+I want to validate the definitions of some kubernetes object my app works with.
 
-* Real world is messy
+Turns out, I want to write and distribute a
+.link https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/ validating admission control
 
-.image images/640px-Entropy.jpg
+* A messier provisioning case, continued
+
+EXAMPLE
+
+* A messier provisioning case, continued
+
+EXAMPLE
+
+* A messier provisioning case, continued
+
+EXAMPLE
+
+* A messier provisioning case, continued
+
+EXAMPLE
+
+* Takeaway
+
+.image images/640px-Entropy.jpg _ 500
 .caption "Spontaneous increase in disorder of a carefully arranged system. An irreversible process, except with the input of energy" by Alex Dinovitser, Creative Commons Attribution-Share Alike 3.0 Unported, from Wikimedia Commons
 
-* Is provisioning always simple? (1/2)
-
-What if my app is _not_ stateless (are DBs banned from cluster?)
-
-What if I need pre-provision or post-provision steps?
-
-1. config updates
-2. integration with external systems (DNS)
-3. integration with the cluster/k8s
-
-* Is provisioning always simple? (2/2)
-
-When you need to integrate components, things may get complicate soon.
-A real world example: a simple validation hook
-
-1. enroll certs
-2. send CSR
-3. approve CSR
-4. create secret
-5. deploy webhook
-6. create service
-7. register configuration
+Apparently simple tasks may take a sudden turn into a messy state. It's a call for new solutions
 
 * Upgrading
 
@@ -92,28 +112,19 @@ What if
 1. we need to undo some changes to the cluster (e.g. config. format changed)
 2. we need to uninstall some components (uninistall in disguise!)
 3. we need some new artifact
+4. ...
 
-* uninstall (1/2)
+You know where this is heading, don't you? :)
+
+* uninstall is simple!
 
 deceptively simple?
 
   kubectl delete -f manifests.yaml
 
-* uninstall (2/2)
+* Is uninstall always simple?
 
-Let's look at the webhook example again, *highlighting* *what* *needs* *cleanup*:
-
-1. enroll certs
-2. *send* *CSR*
-3. approve CSR
-4. *create* *secret*
-5. *deploy* *webhook*
-6. *create* *service*
-7. *register* *configuration*
-
-And in the right order!
-well - this time is easy, just do it in reverse :)
-
+EXAMPLE
 
 * Distribution
 
@@ -189,7 +200,7 @@ TL;DR: consolidate domain knowledge in software running _inside_ a Kubernetes cl
 
 Let's review what we will use to build our Operator(s)
 
-* Building blocks: CRDs
+* Building blocks: CRDs (Custom Resource Definition)
 
 .link https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/ Definition:
 
@@ -203,9 +214,16 @@ Let's review what we will use to build our Operator(s)
   However, many core Kubernetes functions are now built using custom resources, making
   Kubernetes more modular.
 
-Programmers should find this definition familiar (think ADT)
+* CRD Demiystified
 
-TL;DR add user-defined objects that fit and feel native in the K8S infra
+CRD : Kubernetes = Class : Object Oriented Programming Language
+
+Use CRDs to add user-defined objects, using the familiar YAML syntax,
+that fit and feel native in the Kubernetes infra
+
+You can thus reuse *all* the Kubernetes tooling to manage your resource
+
+This includes 3rd party tools - a CRD behaves like a native resource
 
 * Building blocks: controllers
 
@@ -219,12 +237,19 @@ TL;DR add user-defined objects that fit and feel native in the K8S infra
 
 TL;DR: a control loop
 
-* Operator = CRD(s) + Controller + focus
+* Building blocks: a control loop?
 
-.image images/479px-Columbus_Breaking_the_Egg_MET_DP825004.jpg _ 500
-.caption Columbus Breaking the Egg, CC0, From Wikimedia Commons
+  for {
+    desired := getDesiredState()
+    current := getCurrentState()
+    makeChanges(desired, current)
+  }
 
-* Operator VS controller (again)
+* Control loop and Controllers
+
+EXPLAIN
+
+* Operator VS controller
 
 Every operator is-a controller
 But not all controllers are operator
@@ -233,13 +258,68 @@ Operator = CRD(s) + Controller + focus
 
 .link https://github.com/kubeflow/tf-operator/issues/300 Github discussion with lot of good insights
 
-* How to use it?
+* Operator = CRD(s) + Controller + focus
 
-1. deploy CRD
-2. deploy the operator itself
-3. deploy CRs as needed
+.image images/479px-Columbus_Breaking_the_Egg_MET_DP825004.jpg _ 500
+.caption Columbus Breaking the Egg, CC0, From Wikimedia Commons
 
-* When NOT to use an operator?
+* Typical operator deployment flow (1/3)
+
+First: deploy CRDs
+
+  kubectl create -f my_crd.yaml
+
+Yep, that's it. From now on the user can reason in term of the high level objects.
+
+Is that simple because the *scope* is well defined.
+
+* Typical operator deployment flow (2/3)
+
+Next: deploy the operator
+
+Is a regular yaml manifest.
+Is *ONE* regular yaml manifest
+Again, the *scope* is well defined - no complexity explosion!
+
+The simplest entry point possible, regardless the complexity of the app we want to manage
+All the complexity is now *inside* the operator
+
+Abstraction FTW!
+
+* Typical operator deployment flow (3/3)
+
+Deploy CRs as needed
+
+.link https://github.com/coreos/prometheus-operator Let's pick Prometheus monitoring as example
+We just worry about what we want to monitor
+
+  ---
+  apiVersion: monitoring.coreos.com/v1
+  kind: ServiceMonitor
+  metadata:
+    name: my-monitor
+  spec:
+    selector:
+      matchLabels:
+        my-monitor: "my-app"
+    endpoints:
+    - port: metrics
+      scheme: http
+
+* Prometheus configuration
+
+TODO
+
+* Advantages
+
+But: you just want to monitor your app, don't you?
+1. with operator CR, you just focus on what you care about
+2. if you use bare prometheus, you need to *learn* prometheus configuration file syntax
+2. if you use bare prometheus, you need to *debug*/*troubleshoot* prometheus configuration file syntax
+3. if you ure bare prometheus, you need to *maintain* the prometheus configuration file
+
+Actually, even prometheus docs suggest the operator :)
+.link https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config "You may wish to check out the 3rd party Prometheus Operator, which automates the Prometheus setup on top of Kubernetes"
 
 * Finding/Publishing operators
 
@@ -247,9 +327,58 @@ Operator = CRD(s) + Controller + focus
 
   OperatorHub.io is a new home for the Kubernetes community to share Operators
 
+.link https://github.com/operator-framework/awesome-operators Curated list of operators
+
 * Build your own
 
-* Two kinds of operators
+.link https://github.com/operator-framework/operator-sdk There is a handy SDK
+
+Benefits of the SDK:
+
+1. High level APIs and abstractions to write the operational logic more intuitively
+2. Tools for scaffolding and code generation to bootstrap a new project fast
+3. Extensions to cover common operator use cases
+
+* kinds of operators
+
+Options, sorted by decreasing possible integration
+
+1. *GO* native operator - deepest possible integration
+2. *Ansible* operator - reuse roles, cover basic needs
+3. *Helm* operator - reuse helm charts, cover basic needs
+
+* Example: ansible operator (1/4)
+
+Scaffolding handled by the `operator-sdk` tool
+
+.link https://github.com/operator-framework/operator-sdk#quick-start Quickstart
+
+base image: `quay.io/water-hole/ansible-operator`
+
+* Example: ansible operator (2/4)
+
+Define the CRDs you want to manage
+
+`operator-sdk` helps defining the resources
+
+* Example: ansible operator (3/4)
+
+Add the role(s) and the playbook(s)
+
+* Example: ansible operator (4/4)
+
+use `watch.yaml` to wire the resource(s) to monitor and the playbook(s) to run
+
+  - version: v1
+    group: myapp.io
+    kind: MyResource
+    playbook: /opt/ansible/my_paybook.yaml
+
+*Done!*
+
+* PENDING
+
+PENDING
 
 * Talk wrap up (1/4)
 
