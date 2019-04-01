@@ -25,13 +25,6 @@ http://github.com/{mojaves,fromanirh}
 .image images/Container_crane_and_MSC_Sola.jpg 420 _
 .caption "Containers are being loaded on the container ship MSC Sola at the container terminal of Bremerhaven in Germany" by Tvabutzku1234, public domain, from Wikimedia Commons
 
-* Expectations
-
-How's managing applications in a kubernetes cluster?
-
-.image images/640px-B747-cockpit.jpg _ 520
-.caption "Cockpit of a 747-230 seen at the Technik Museum Speyer (Germany)" by Snowdog, public domain, from Wikimedia commons
-
 * Common management tasks
 
 Let's focus on the stuff everyone takes for granted
@@ -72,38 +65,76 @@ Let's focus on the stuff everyone takes for granted
         port: 3000
         targetPort: 3000
 
-* A messier provisioning case
+* Why Simple provision is Simple?
+
+Because the component I'm deploying
+- is standalone
+- has minimal interaction with the cluster
+- requires no configuration
+- is stateless
+
+this is AWESOME!
+Unfortunately, this is not always the case...
+
+* Going meta: a messier provisioning case
 
 Let's try something a bit more advanced.
-I want to integrate with the simplest possible external component: Kubernetes itself.
 
-I want to validate the definitions of some kubernetes object my app works with.
+I need to create a backend service
 
-Turns out, I want to write and distribute a
-.link https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/ validating admission control
+.link https://docs.openshift.com/container-platform/3.11/dev_guide/templates.html I need to make my resources parameterized
 
-* A messier provisioning case, continued
+I want to validate the parameters to offer better user experience and rich error reporting.
 
-EXAMPLE
+.link https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/ Turns out, I want to write and distribute a validating admission webhook.
 
-* A messier provisioning case, continued
-
-EXAMPLE
+Demystified: a "validating admission webhook" is a web service which conforms to a kubernetes API (JSON input/output)
 
 * A messier provisioning case, continued
 
-EXAMPLE
+Since I need to integrate with the kubernetes cluster, my component is no longer
+- standalone
+- minimally interacting with the cluster
+
+.image images/640px-Avalanche_danger_sign.jpg
+.caption "Avalanche danger sign" by Nicolas Cool @shotz, CC0, from Wikimedia Commons
 
 * A messier provisioning case, continued
 
-EXAMPLE
+A Validating admission webhook installation steps.
+
+1. Create TLS certificates
+- use openssl?
+- any other tools (cloudflare/cfssl?)
+- wrapper script to set the right parameters
+- where* are my certificates being stored?
+
+2. Pack the certificates in a "Certificate Signing Request", send it to the cluster
+
+3. Approve the "Certificate Signing Request"
+
+* A messier provisioning case, continued
+
+4. Fetch certificates from the *approved* request
+
+5. Pack the certificates in a Kubernetes Secret object
+
+* A messier provisioning case, continued
+
+6. Rollout Kubernetes Deployment for my app
+
+7. Create Kubernetes Service for my app
+
+* A messier provisioning case, continued
+
+8. Fetch the cluster CA bundle
+
+9. Register the endpoint in the Kubernetes APIserver
 
 * Takeaway
 
-.image images/640px-Entropy.jpg _ 500
-.caption "Spontaneous increase in disorder of a carefully arranged system. An irreversible process, except with the input of energy" by Alex Dinovitser, Creative Commons Attribution-Share Alike 3.0 Unported, from Wikimedia Commons
-
-Apparently simple tasks may take a sudden turn into a messy state. It's a call for new solutions
+.image images/TrafficJamFrustration.jpg
+.caption "Frustrated by traffic congestion" by Raysonho, CC0, from Wikimedia Commons
 
 * Upgrading
 
@@ -124,15 +155,24 @@ deceptively simple?
 
 * Is uninstall always simple?
 
-EXAMPLE
+1. De-register the endpoint in the Kubernetes APIserver
+2. Delete the Kubernetes Secret object
+3. Delete the Kubernetes Service for my app
+4. Delete the Kubernetes Deployment for my app
+5. Delete the Kubernetes Certificate Signing Request for my app
 
+So...
+
+.image images/TrafficJamFrustration.jpg _ 400
+.caption "Frustrated by traffic congestion" by Raysonho, CC0, from Wikimedia Commons
 * Distribution
 
 How much stuff do I need to ship?
-Just a manifest and an image?
-*Many* manifests and an image?
-*Many* manifests and *many* images?
-Do I need to do extra steps in the middle?
+
+1. helper scripts
+2. manifests
+3. container image
+4. *instructions*/*documentation*
 
 * Solutions?
 
@@ -291,7 +331,7 @@ Abstraction FTW!
 Deploy CRs as needed
 
 .link https://github.com/coreos/prometheus-operator Let's pick Prometheus monitoring as example
-We just worry about what we want to monitor
+Because Prometheus is awesome, and we want to use it!
 
   ---
   apiVersion: monitoring.coreos.com/v1
@@ -308,18 +348,35 @@ We just worry about what we want to monitor
 
 * Prometheus configuration
 
-TODO
+.image images/configuration_prometheus_tiles-0.png
 
-* Advantages
+* Prometheus configuration
 
-But: you just want to monitor your app, don't you?
-1. with operator CR, you just focus on what you care about
-2. if you use bare prometheus, you need to *learn* prometheus configuration file syntax
-2. if you use bare prometheus, you need to *debug*/*troubleshoot* prometheus configuration file syntax
-3. if you ure bare prometheus, you need to *maintain* the prometheus configuration file
+.image images/configuration_prometheus_tiles-1.png
 
-Actually, even prometheus docs suggest the operator :)
-.link https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config "You may wish to check out the 3rd party Prometheus Operator, which automates the Prometheus setup on top of Kubernetes"
+* Prometheus configuration
+
+.image images/configuration_prometheus_tiles-2.png
+
+* Prometheus configuration
+
+.image images/configuration_prometheus_tiles-3.png
+
+* Prometheus configuration
+
+.image images/configuration_prometheus_tiles-4.png
+
+* Prometheus configuration
+
+.image images/configuration_prometheus_tiles-5.png
+
+* Prometheus configuration
+
+.image images/configuration_prometheus_tiles-6.png
+
+.link https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config Yep, that's a quote from the official documentation
+
+Abstraction FTW!
 
 * Finding/Publishing operators
 
