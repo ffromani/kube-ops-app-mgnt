@@ -107,7 +107,7 @@ A Validating admission webhook installation steps.
 - use openssl?
 - any other tools (cloudflare/cfssl?)
 - wrapper script to set the right parameters
-- where* are my certificates being stored?
+- *where* are my certificates being stored?
 
 2. Pack the certificates in a "Certificate Signing Request", send it to the cluster
 
@@ -198,6 +198,15 @@ Wouldn't be better if the automation was _inside_ the cluster?
 4. Focus on the high level items
 5. Use kubernetes tools to solve a kubernetes issue :)
 
+* Kubernetes applications?
+
+Wait, what's a "kubernetes application"?
+
+  A Kubernetes application is an application that is both deployed on Kubernetes
+  and managed using the Kubernetes APIs and kubectl tooling.
+
+.link https://developers.redhat.com/blog/2018/12/18/kubernetes-operators-in-depth/?intcmp=701f2000000tjyaAAA source (among many others)
+
 * #define operator
 
 .link https://developers.redhat.com/blog/2018/12/18/kubernetes-operators-in-depth?intcmp=701f2000000tjyaAAA From "Kubernetes Operators in Depth":
@@ -208,17 +217,6 @@ Wouldn't be better if the automation was _inside_ the cluster?
    Humans should not be involved in this kind of operation because it kind of breaks the promise that
    containers gave us. Containers’ promise was ‘Hey, you package it once, it runs everywhere.
 
-* Kubernetes applications?
-
-Wait, what's a "kubernetes application"?
-
-  A Kubernetes application is an application that is both deployed on Kubernetes
-  and managed using the Kubernetes APIs and kubectl tooling.
-
-.link https://developers.redhat.com/blog/2018/12/18/kubernetes-operators-in-depth/?intcmp=701f2000000tjyaAAA source (among many others)
-
-* Operator definition revised
-
 .link https://operatorhub.io/what-is-an-operator "What is an Operator?"
 
   The goal of an Operator is to put operational knowledge into software.
@@ -226,7 +224,7 @@ Wait, what's a "kubernetes application"?
   various combinations of shell scripts or automation software like Ansible.
   It was outside of your Kubernetes cluster and hard to integrate.
 
-* Operator definition, final
+* Operator definition, distilled
 
 TL;DR: consolidate domain knowledge in software running _inside_ a Kubernetes cluster.
 
@@ -285,9 +283,10 @@ TL;DR: a control loop
     makeChanges(desired, current)
   }
 
-* Control loop and Controllers
+The main duty is to react to changes in the cluster _actual_ state and do whatever
+is possible to update it so that it matches the _desired_ state.
 
-EXPLAIN
+Simple(st?) example: ReplicaSet Controller in any Deployment.
 
 * Operator VS controller
 
@@ -303,17 +302,22 @@ Operator = CRD(s) + Controller + focus
 .image images/479px-Columbus_Breaking_the_Egg_MET_DP825004.jpg _ 500
 .caption Columbus Breaking the Egg, CC0, From Wikimedia Commons
 
-* Typical operator deployment flow (1/3)
+* Typical operator deployment flow (1/2)
 
-First: deploy CRDs
+First: deploy CR(D)s
 
   kubectl create -f my_crd.yaml
 
-Yep, that's it. From now on the user can reason in term of the high level objects.
+From now on the user can reason in term of the high level objects.
+  
+  kubectl create -f my_cr1.yaml
+  kubectl create -f my_cr2.yaml
 
-Is that simple because the *scope* is well defined.
+Is that simple because the *scope* of the resources is well defined.
+Is that simple *when* the scope of the resources is well defined.
+Remember: *focus*
 
-* Typical operator deployment flow (2/3)
+* Typical operator deployment flow (2/2)
 
 Next: deploy the operator
 
@@ -326,9 +330,7 @@ All the complexity is now *inside* the operator
 
 Abstraction FTW!
 
-* Typical operator deployment flow (3/3)
-
-Deploy CRs as needed
+* Higher level dividends
 
 .link https://github.com/coreos/prometheus-operator Let's pick Prometheus monitoring as example
 Because Prometheus is awesome, and we want to use it!
@@ -378,6 +380,11 @@ Because Prometheus is awesome, and we want to use it!
 
 Abstraction FTW!
 
+* OK, let's experiment
+
+.image images/450px-Faraday_cage_running_at_110000_V.jpg _ 360
+.caption "The Faraday Cage is in the High voltage Lab of the University of canterbury Engineerig School", by David Jackson, public domain, from Wikimedia Commons
+
 * Finding/Publishing operators
 
 .link https://operatorhub.io/ OperatorHUB.io
@@ -412,6 +419,8 @@ Scaffolding handled by the `operator-sdk` tool
 
 base image: `quay.io/water-hole/ansible-operator`
 
+.link https://github.com/ansible/ansible-runner in turn based (currently) on ansible-runner
+
 * Example: ansible operator (2/4)
 
 Define the CRDs you want to manage
@@ -421,6 +430,12 @@ Define the CRDs you want to manage
 * Example: ansible operator (3/4)
 
 Add the role(s) and the playbook(s)
+
+Just copy the files in the image
+
+CAVEAT: The operator runs with different account, so you'll likely need to fix the cluster RBAC permissions
+
+The operator-sdk helps in that too
 
 * Example: ansible operator (4/4)
 
@@ -433,9 +448,12 @@ use `watch.yaml` to wire the resource(s) to monitor and the playbook(s) to run
 
 *Done!*
 
-* PENDING
+* Ready to run!
 
-PENDING
+Go and run your operators!
+
+.image images/Tring_Parkrun_Finish.png
+.caption "The runners, which are running Tring Parkrun, are sprinting to finish their run after running 5 kilometers" by Tring Parkrun, CC0, from Wikimedia Commons
 
 * Talk wrap up (1/4)
 
@@ -459,9 +477,21 @@ Automation runs outside the cluster
 
 Operator pattern to the rescue!
 
+An "operator" is a specialized, *focused* Kubernetes controller
+
+Watches cluster resource(s) and reconcile the cluster state towards the desired state
+
+The resource is our application!
+
 * Talk wrap up (4/4)
 
 How to build your own operator
+
+Any controller can be adapted to the task
+
+.link https://github.com/operator-framework/operator-sdk operator-sdk makes the life easier
+
+With operator SDK, you can easily reuse your ansible roles and helm charts!
 
 * Q? A!
 
