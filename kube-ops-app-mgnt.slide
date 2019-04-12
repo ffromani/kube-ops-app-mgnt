@@ -28,7 +28,7 @@ http://github.com/{mojaves,fromanirh}
 * Common management tasks
 
 Let's focus on the stuff everyone takes for granted
-1. provision/configuration
+1. provision/installation
 2. upgrade
 3. uninstall
 
@@ -185,6 +185,8 @@ Still needs to connect to the cluster _from_ _outside_ (CLI tool? daemon?)
 
 Wouldn't be better if the automation was _inside_ the cluster?
 
+That's the next level ;)
+
 * Operations and operators
 
 .image images/640px-An_emergency_dispatch_center_in_Finland.jpg
@@ -194,7 +196,7 @@ Wouldn't be better if the automation was _inside_ the cluster?
 
 1. Manage a kubernetes application like humans would do, but automatically
 2. Embed the domain-specific knowledge in a software unit
-3. Make the solution easy to deploy and the consume
+3. Make the solution easy to deploy and to consume
 4. Focus on the high level items
 5. Use kubernetes tools to solve a kubernetes issue :)
 
@@ -297,6 +299,10 @@ Operator = CRD(s) + Controller + focus
 
 .link https://github.com/kubeflow/tf-operator/issues/300 Github discussion with lot of good insights
 
+: Stress on FOCUS.
+: Limited scope creates the advantages
+: Don't spoil the next slide!
+
 * Operator = CRD(s) + Controller + focus
 
 .image images/479px-Columbus_Breaking_the_Egg_MET_DP825004.jpg _ 500
@@ -317,6 +323,8 @@ Is that simple because the *scope* of the resources is well defined.
 Is that simple *when* the scope of the resources is well defined.
 Remember: *focus*
 
+: recall FOCUS
+
 * Typical operator deployment flow (2/2)
 
 Next: deploy the operator
@@ -335,6 +343,24 @@ Abstraction FTW!
 .link https://github.com/coreos/prometheus-operator Let's pick Prometheus monitoring as example
 Because Prometheus is awesome, and we want to use it!
 
+: Does the audience know about prometheus? ask!
+: Spend some time introducing prometheus
+
+* Higher level dividends - continued
+
+
+  apiVersion: monitoring.coreos.com/v1
+  kind: Prometheus
+  metadata:
+    name: prometheus
+  spec:
+    serviceAccountName: prometheus
+    serviceMonitorSelector:
+      matchLabels:
+        my-monitor: "my-app"
+    resources:
+      requests:
+        memory: 400Mi
   ---
   apiVersion: monitoring.coreos.com/v1
   kind: ServiceMonitor
@@ -347,6 +373,8 @@ Because Prometheus is awesome, and we want to use it!
     endpoints:
     - port: metrics
       scheme: http
+
+: Highlight what we achieved here
 
 * Prometheus configuration
 
@@ -380,18 +408,23 @@ Because Prometheus is awesome, and we want to use it!
 
 Abstraction FTW!
 
+: recall the FOCUS
+: why so complex?
+
 * OK, let's experiment
 
 .image images/450px-Faraday_cage_running_at_110000_V.jpg _ 360
 .caption "The Faraday Cage is in the High voltage Lab of the University of canterbury Engineerig School", by David Jackson, public domain, from Wikimedia Commons
 
-* Finding/Publishing operators
+* Finding operators
 
 .link https://operatorhub.io/ OperatorHUB.io
 
   OperatorHub.io is a new home for the Kubernetes community to share Operators
 
 .link https://github.com/operator-framework/awesome-operators Curated list of operators
+
+: first let's see the tools to find existing operators
 
 * Build your own
 
@@ -462,6 +495,8 @@ what we seen?
 1. life in a cluster
 2. operations and operators
 3. build your own operator
+
+: this is the summary, don't spoil the next slides!
 
 * Talk wrap up (2/4)
 
